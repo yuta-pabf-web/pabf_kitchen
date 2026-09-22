@@ -22,16 +22,28 @@ h1{margin:0 0 16px}.total{font-size:52px;font-weight:900}.row{display:flex;justi
 </div>
 </main>
 <script>
-const NS="pabf-sm-9f4c2a6b1e84a39";
-function unlock(){if(document.getElementById('pw').value==='3725'){document.getElementById('login').hidden=true;document.getElementById('dash').hidden=false;load();}else{alert('パスワードが違います');}}
+const NS="pabfsm20260923x8k2m4p7";
+const BASE='https://abacus.jasoncameron.dev';
+function unlock(){
+  if(document.getElementById('pw').value==='3725'){
+    document.getElementById('login').hidden=true;
+    document.getElementById('dash').hidden=false;
+    load();
+  }else alert('パスワードが違います');
+}
+async function getCounter(key){
+  const r=await fetch(BASE+'/get/'+encodeURIComponent(NS)+'/'+encodeURIComponent(key),{cache:'no-store'});
+  if(!r.ok) return 0;
+  const d=await r.json();
+  return Number(d.value||0);
+}
 async function load(){
-  const r=await fetch('https://mantledb.sh/v2/'+NS+'/stats',{cache:'no-store'});
-  const d=r.ok?await r.json():{};
-  document.getElementById('total').textContent=d.total||0;
-  document.getElementById('q1y').textContent=d.q1_yes||0;
-  document.getElementById('q1n').textContent=d.q1_no||0;
-  document.getElementById('q2y').textContent=d.q2_yes||0;
-  document.getElementById('q2n').textContent=d.q2_no||0;
+  const [total,q1y,q1n,q2y,q2n]=await Promise.all(['total','q1_yes','q1_no','q2_yes','q2_no'].map(getCounter));
+  document.getElementById('total').textContent=total;
+  document.getElementById('q1y').textContent=q1y;
+  document.getElementById('q1n').textContent=q1n;
+  document.getElementById('q2y').textContent=q2y;
+  document.getElementById('q2n').textContent=q2n;
 }
 </script>
 </body>
