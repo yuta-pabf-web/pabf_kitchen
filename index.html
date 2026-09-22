@@ -22,7 +22,7 @@ h1{margin:0 0 8px;font-size:28px;line-height:1.35;letter-spacing:-.02em}
 input[type=radio]{width:20px;height:20px;accent-color:#111}
 button{width:100%;border:0;border-radius:14px;padding:16px 18px;background:#111;color:#fff;font-size:16px;font-weight:900;cursor:pointer}
 button:disabled{opacity:.55}
-.msg{margin-top:16px;padding:13px 14px;border-radius:13px;background:#f1f3f5;color:#34373d;display:none}
+.msg{margin-top:16px;padding:13px 14px;border-radius:13px;background:#fff2f2;color:#9f1d1d;display:none}
 .done{text-align:center;padding:48px 18px}
 .done .mark{font-size:42px;margin-bottom:12px}
 .small{font-size:12px;color:var(--muted);margin-top:16px;line-height:1.6}
@@ -32,7 +32,7 @@ button:disabled{opacity:.55}
 <body>
 <main class="wrap">
   <div class="logo">PABF</div>
-  <section class="card" id="card">
+  <section class="card">
     <div id="formView">
       <h1>2問だけのアンケート</h1>
       <p class="sub">ご協力ありがとうございます。20秒ほどで回答できます。</p>
@@ -61,25 +61,20 @@ button:disabled{opacity:.55}
   </section>
 </main>
 <script>
-const NS="pabf-sm-9f4c2a6b1e84a39";
-const API='https://mantledb.sh/v2/increment/'+NS+'/stats';
+const NS="pabfsm20260923x8k2m4p7";
+const BASE='https://abacus.jasoncameron.dev';
 const form=document.getElementById('survey');
 const btn=document.getElementById('submitBtn');
 const msg=document.getElementById('msg');
 
-if(localStorage.getItem('pabf_survey_submitted')==='1'){
+if(localStorage.getItem('pabf_survey_submitted_v2')==='1'){
   document.getElementById('formView').hidden=true;
   document.getElementById('doneView').hidden=false;
 }
 
-async function inc(key){
-  const r=await fetch(API,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({key:key,by:1})
-  });
-  if(!r.ok) throw new Error('submit failed');
-  return r.json();
+function hit(key){
+  return fetch(BASE+'/hit/'+encodeURIComponent(NS)+'/'+encodeURIComponent(key),{cache:'no-store'})
+    .then(r=>{if(!r.ok) throw new Error('HTTP '+r.status); return r.json();});
 }
 
 form.addEventListener('submit',async(e)=>{
@@ -87,7 +82,7 @@ form.addEventListener('submit',async(e)=>{
   const fd=new FormData(form);
   const q1=fd.get('q1');
   const q2=fd.get('q2');
-  if(!q1||!q2) return;
+  if(!q1||!q2)return;
 
   btn.disabled=true;
   btn.textContent='送信中…';
@@ -95,15 +90,15 @@ form.addEventListener('submit',async(e)=>{
 
   try{
     await Promise.all([
-      inc('total'),
-      inc(q1==='yes'?'q1_yes':'q1_no'),
-      inc(q2==='yes'?'q2_yes':'q2_no')
+      hit('total'),
+      hit(q1==='yes'?'q1_yes':'q1_no'),
+      hit(q2==='yes'?'q2_yes':'q2_no')
     ]);
-    localStorage.setItem('pabf_survey_submitted','1');
+    localStorage.setItem('pabf_survey_submitted_v2','1');
     document.getElementById('formView').hidden=true;
     document.getElementById('doneView').hidden=false;
   }catch(err){
-    msg.textContent='送信に失敗しました。通信環境を確認して、もう一度お試しください。';
+    msg.textContent='送信に失敗しました。もう一度お試しください。';
     msg.style.display='block';
     btn.disabled=false;
     btn.textContent='回答を送信';
