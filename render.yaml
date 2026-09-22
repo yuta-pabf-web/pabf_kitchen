@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: success-march-survey
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    healthCheckPath: /health
+    envVars:
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DB_PATH
+        value: /var/data/responses.db
+    disk:
+      name: survey-data
+      mountPath: /var/data
+      sizeGB: 1
