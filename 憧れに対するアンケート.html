@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PABF アンケート</title>
+<title>憧れに対するアンケート</title>
 <style>
 :root{--bg:#f5f6f7;--card:#fff;--text:#111318;--muted:#737780;--line:#e4e6ea}
 *{box-sizing:border-box}
@@ -23,82 +23,72 @@ input[type=radio]{width:20px;height:20px;accent-color:#111}
 button{width:100%;border:0;border-radius:14px;padding:16px 18px;background:#111;color:#fff;font-size:16px;font-weight:900;cursor:pointer}
 button:disabled{opacity:.55}
 .msg{margin-top:16px;padding:13px 14px;border-radius:13px;background:#fff2f2;color:#9f1d1d;display:none}
-.done{text-align:center;padding:48px 18px}
-.done .mark{font-size:42px;margin-bottom:12px}
+.done{text-align:center;padding:48px 18px}.done .mark{font-size:42px;margin-bottom:12px}
 .small{font-size:12px;color:var(--muted);margin-top:16px;line-height:1.6}
 @media(max-width:600px){.wrap{padding-top:18px}.card{padding:21px}h1{font-size:24px}.qt{font-size:17px}}
 </style>
 </head>
 <body>
 <main class="wrap">
-  <div class="logo">PABF</div>
-  <section class="card">
-    <div id="formView">
-      <h1>2問だけのアンケート</h1>
-      <p class="sub">ご協力ありがとうございます。20秒ほどで回答できます。</p>
-      <form id="survey">
-        <div class="q first">
-          <div class="qn">QUESTION 01</div>
-          <div class="qt">あなたにとって、憧れの存在はいますか？</div>
-          <label class="choice"><input type="radio" name="q1" value="yes" required>はい</label>
-          <label class="choice"><input type="radio" name="q1" value="no">いいえ</label>
-        </div>
-        <div class="q">
-          <div class="qn">QUESTION 02</div>
-          <div class="qt">「一度でいいから、この人のように1日を生きてみたい」や「この人が見ている世界を自分もみてみたい」と思ったことはありますか？</div>
-          <label class="choice"><input type="radio" name="q2" value="yes" required>はい</label>
-          <label class="choice"><input type="radio" name="q2" value="no">いいえ</label>
-        </div>
-        <button id="submitBtn" type="submit">回答を送信</button>
-        <div class="msg" id="msg"></div>
-        <div class="small">個人を特定する情報は収集しません。</div>
-      </form>
-    </div>
-    <div id="doneView" class="done" hidden>
-      <div class="mark">✓</div>
-      <h1>ご回答ありがとうございました。</h1>
-    </div>
-  </section>
+<div class="logo">PABF</div>
+<section class="card">
+<div id="formView">
+<h1>2問だけのアンケート</h1>
+<p class="sub">ご協力ありがとうございます。20秒ほどで回答できます。</p>
+<form id="survey">
+<div class="q first">
+<div class="qn">QUESTION 01</div>
+<div class="qt">あなたにとって、憧れの存在はいますか？</div>
+<label class="choice"><input type="radio" name="q1" value="yes" required>はい</label>
+<label class="choice"><input type="radio" name="q1" value="no">いいえ</label>
+</div>
+<div class="q">
+<div class="qn">QUESTION 02</div>
+<div class="qt">「一度でいいから、この人のように1日を生きてみたい」や「この人が見ている世界を自分もみてみたい」と思ったことはありますか？</div>
+<label class="choice"><input type="radio" name="q2" value="yes" required>はい</label>
+<label class="choice"><input type="radio" name="q2" value="no">いいえ</label>
+</div>
+<button id="submitBtn" type="submit">回答を送信</button>
+<div class="msg" id="msg"></div>
+<div class="small">個人を特定する情報は収集しません。</div>
+</form>
+</div>
+<div id="doneView" class="done" hidden><div class="mark">✓</div><h1>ご回答ありがとうございました。</h1></div>
+</section>
 </main>
 <script>
-const NS="pabfsm20260923x8k2m4p7";
+const NS="pabfadmire20260925v3m7x4";
 const BASE='https://abacus.jasoncameron.dev';
 const form=document.getElementById('survey');
 const btn=document.getElementById('submitBtn');
 const msg=document.getElementById('msg');
+const submittedKey='pabf_admire_survey_v3';
 
-if(localStorage.getItem('pabf_survey_submitted_v2')==='1'){
+if(localStorage.getItem(submittedKey)==='1'){
   document.getElementById('formView').hidden=true;
   document.getElementById('doneView').hidden=false;
-}
-
-function hit(key){
-  return fetch(BASE+'/hit/'+encodeURIComponent(NS)+'/'+encodeURIComponent(key),{cache:'no-store'})
-    .then(r=>{if(!r.ok) throw new Error('HTTP '+r.status); return r.json();});
 }
 
 form.addEventListener('submit',async(e)=>{
   e.preventDefault();
   const fd=new FormData(form);
-  const q1=fd.get('q1');
-  const q2=fd.get('q2');
+  const q1=fd.get('q1'), q2=fd.get('q2');
   if(!q1||!q2)return;
+  const answerKey='a_'+q1+'_'+q2;
 
   btn.disabled=true;
   btn.textContent='送信中…';
   msg.style.display='none';
 
   try{
-    await Promise.all([
-      hit('total'),
-      hit(q1==='yes'?'q1_yes':'q1_no'),
-      hit(q2==='yes'?'q2_yes':'q2_no')
-    ]);
-    localStorage.setItem('pabf_survey_submitted_v2','1');
+    const r=await fetch(BASE+'/hit/'+encodeURIComponent(NS)+'/'+encodeURIComponent(answerKey),{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    await r.json();
+    localStorage.setItem(submittedKey,'1');
     document.getElementById('formView').hidden=true;
     document.getElementById('doneView').hidden=false;
   }catch(err){
-    msg.textContent='送信に失敗しました。もう一度お試しください。';
+    msg.textContent='送信に失敗しました。ページを再読み込みして、もう一度お試しください。';
     msg.style.display='block';
     btn.disabled=false;
     btn.textContent='回答を送信';
