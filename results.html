@@ -8,22 +8,24 @@
 body{margin:0;background:#f5f6f7;color:#111318;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif}
 .wrap{max-width:760px;margin:0 auto;padding:28px 18px 60px}
 .card{background:#fff;border:1px solid #e4e6ea;border-radius:22px;padding:24px;margin-bottom:16px}
-h1{margin:0 0 16px}.total{font-size:52px;font-weight:900}.row{display:flex;justify-content:space-between;gap:18px;padding:11px 0;border-top:1px solid #e4e6ea}.muted{color:#747780}.login{max-width:420px;margin:80px auto 0}.pass{width:100%;padding:14px;border:1px solid #ddd;border-radius:12px;font-size:18px;margin:10px 0}.btn{width:100%;padding:14px;border:0;border-radius:12px;background:#111;color:#fff;font-weight:800}
+h1{margin:0 0 16px}.total{font-size:52px;font-weight:900}.row{display:flex;justify-content:space-between;gap:18px;padding:11px 0;border-top:1px solid #e4e6ea}.muted{color:#747780}.login{max-width:420px;margin:80px auto 0}.pass{width:100%;padding:14px;border:1px solid #ddd;border-radius:12px;font-size:18px;margin:10px 0}.btn{width:100%;padding:14px;border:0;border-radius:12px;background:#111;color:#fff;font-weight:800}.note{font-size:12px;color:#747780;margin-top:12px;line-height:1.6}
 </style>
 </head>
 <body>
 <main class="wrap">
 <section id="login" class="card login"><h1>結果を見る</h1><div class="muted">パスワードを入力してください。</div><input id="pw" class="pass" type="password" inputmode="numeric"><button class="btn" onclick="unlock()">表示</button></section>
 <div id="dash" hidden>
-  <section class="card"><div class="muted">総回答数</div><div class="total" id="total">0</div></section>
+  <section class="card"><div class="muted">総回答数</div><div class="total" id="total">0</div><div class="note">旧アンケート＋現在の「憧れに対するアンケート」の回答を合算表示</div></section>
   <section class="card"><h1>Q1 憧れの存在はいますか？</h1><div class="row"><span>はい</span><strong id="q1y">0</strong></div><div class="row"><span>いいえ</span><strong id="q1n">0</strong></div></section>
   <section class="card"><h1>Q2 その人のように1日を生きてみたいと思ったことはありますか？</h1><div class="row"><span>はい</span><strong id="q2y">0</strong></div><div class="row"><span>いいえ</span><strong id="q2n">0</strong></div></section>
   <button class="btn" onclick="load()">最新の結果を読み込む</button>
 </div>
 </main>
 <script>
-const NS="pabfsm20260923x8k2m4p7";
+const OLD_NS="pabfsm20260923x8k2m4p7";
+const NEW_NS="pabfadmire20260925v3m7x4";
 const BASE='https://abacus.jasoncameron.dev';
+
 function unlock(){
   if(document.getElementById('pw').value==='3725'){
     document.getElementById('login').hidden=true;
@@ -31,14 +33,37 @@ function unlock(){
     load();
   }else alert('パスワードが違います');
 }
-async function getCounter(key){
-  const r=await fetch(BASE+'/get/'+encodeURIComponent(NS)+'/'+encodeURIComponent(key),{cache:'no-store'});
+
+async function getCounter(ns,key){
+  const r=await fetch(BASE+'/get/'+encodeURIComponent(ns)+'/'+encodeURIComponent(key),{cache:'no-store'});
   if(!r.ok) return 0;
   const d=await r.json();
   return Number(d.value||0);
 }
+
 async function load(){
-  const [total,q1y,q1n,q2y,q2n]=await Promise.all(['total','q1_yes','q1_no','q2_yes','q2_no'].map(getCounter));
+  const [
+    oldTotal,oldQ1Y,oldQ1N,oldQ2Y,oldQ2N,
+    yy,yn,ny,nn
+  ]=await Promise.all([
+    getCounter(OLD_NS,'total'),
+    getCounter(OLD_NS,'q1_yes'),
+    getCounter(OLD_NS,'q1_no'),
+    getCounter(OLD_NS,'q2_yes'),
+    getCounter(OLD_NS,'q2_no'),
+    getCounter(NEW_NS,'a_yes_yes'),
+    getCounter(NEW_NS,'a_yes_no'),
+    getCounter(NEW_NS,'a_no_yes'),
+    getCounter(NEW_NS,'a_no_no')
+  ]);
+
+  const newTotal=yy+yn+ny+nn;
+  const total=oldTotal+newTotal;
+  const q1y=oldQ1Y+yy+yn;
+  const q1n=oldQ1N+ny+nn;
+  const q2y=oldQ2Y+yy+ny;
+  const q2n=oldQ2N+yn+nn;
+
   document.getElementById('total').textContent=total;
   document.getElementById('q1y').textContent=q1y;
   document.getElementById('q1n').textContent=q1n;
